@@ -22,7 +22,7 @@ class GeminiTextChatbot(BaseChatbot):
         self.databace = databace
 
         self.model = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-pro",
             temperature=0.8,
             max_tokens=None,
             timeout=None,
