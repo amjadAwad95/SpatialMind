@@ -3,3 +3,7 @@ langchain_community
 langchain_google_genai
 langchain_core
 psycopg2
+fastapi
+uvicorn
+python-multipart
+pydantic
