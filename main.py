@@ -1,9 +1,9 @@
-from fastapi import FastAPI, HTTPException, Depends
-from pydantic import BaseModel
-from typing import Optional, Dict, List, Any
+import uvicorn
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from typing import Optional, Dict, List, Any
 from factory import ChatbotFactory, DatabaseFactory, ChatbotType, DatabaseType
-import os
 
 load_dotenv()
 
@@ -21,9 +21,15 @@ class DatabaseConfig(BaseModel):
     db_port: str
 
 
-class ChatRequest(BaseModel):
+class TextChatRequest(BaseModel):
     session_id: str
     message: str
+
+
+class VisionChatRequest(BaseModel):
+    session_id: str
+    message: str
+    image: str
 
 
 class ExecuteQueryRequest(BaseModel):
@@ -59,34 +65,29 @@ class StatusResponse(BaseModel):
 @app.get("/")
 async def root():
     return {
-        "message": "Gemini Chatbot API",
+        "message": "Spatial Mind Chatbot API",
         "endpoints": {
             "POST /initialize": "Initialize a chatbot session with database config",
-            "POST /chat": "Send a message to the chatbot",
+            "POST /chat/text": "Send a message to the chatbot",
+            "POST /chat/vision": "Send a message with an image to the chatbot",
             "POST /execute": "Execute a SQL query",
             "DELETE /session/{session_id}": "Close a session",
-            "GET /health": "Health check",
         },
     }
 
 
 @app.post("/initialize", response_model=StatusResponse)
 async def initialize_chatbot(request: ChatbotInitRequest):
-    """
-    Initialize a new chatbot session with custom database configuration.
-    """
     try:
         if request.session_id in sessions:
             raise HTTPException(
-                status_code=400, detail=f"Session {request.session_id} already exists"
+                status_code=400, detail=f"Session {request.session_id} already exists."
             )
 
-        db_type_map = {
-            "postgresql": DatabaseType.POSTGRESQL,
-        }
-
-        chatbot_type_map = {
+        db_type_map = {"postgresql": DatabaseType.POSTGRESQL}
+        chat_type_map = {
             "gemini_text": ChatbotType.GEMINI_TEXT,
+            "gemini_vision": ChatbotType.GEMINI_VISION,
         }
 
         db_type = db_type_map.get(request.database_config.db_type.lower())
@@ -96,7 +97,7 @@ async def initialize_chatbot(request: ChatbotInitRequest):
                 detail=f"Unsupported database type: {request.database_config.db_type}",
             )
 
-        chatbot_type = chatbot_type_map.get(request.chatbot_type.lower())
+        chatbot_type = chat_type_map.get(request.chatbot_type.lower())
         if not chatbot_type:
             raise HTTPException(
                 status_code=400,
@@ -111,6 +112,7 @@ async def initialize_chatbot(request: ChatbotInitRequest):
             db_host=request.database_config.db_host,
             db_port=request.database_config.db_port,
         )
+
         database.connect()
 
         chatbot = ChatbotFactory.create_chatbot(
@@ -121,22 +123,18 @@ async def initialize_chatbot(request: ChatbotInitRequest):
 
         return StatusResponse(
             status="success",
-            message=f"Session {request.session_id} initialized successfully",
+            message=f"Session {request.session_id} initialized successfully.",
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
-    """
-    Send a message to the chatbot in an existing session.
-    """
+@app.post("/chat/text", response_model=ChatResponse)
+async def text_chat(request: TextChatRequest):
     if request.session_id not in sessions:
         raise HTTPException(
-            status_code=404,
-            detail=f"Session {request.session_id} not found. Please initialize first.",
+            status_code=404, detail=f"Session {request.session_id} not found."
         )
 
     try:
@@ -149,23 +147,40 @@ async def chat(request: ChatRequest):
                 detail="Chatbot returned no response. Please check your API keys and try again.",
             )
 
-        return ChatResponse(session_id=request.session_id, response=str(response))
+        return ChatResponse(session_id=request.session_id, response=response)
 
     except HTTPException:
         raise
     except Exception as e:
-        import traceback
+        raise HTTPException(status_code=500, detail=str(e))
 
-        error_detail = f"Error: {str(e)}\n\nTraceback: {traceback.format_exc()}"
-        print(error_detail)
+
+@app.post("/chat/vision", response_model=ChatResponse)
+async def vision_chat(request: VisionChatRequest):
+    if request.session_id not in sessions:
+        raise HTTPException(
+            status_code=404, detail=f"Session {request.session_id} not found."
+        )
+
+    try:
+        chatbot = sessions[request.session_id]["chatbot"]
+        response = chatbot.chat({"query": request.message, "image": request.image})
+
+        if response is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Chatbot returned no response. Please check your API keys and try again.",
+            )
+
+        return ChatResponse(session_id=request.session_id, response=response)
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/execute", response_model=QueryExecutionResponse)
 async def execute_query(request: ExecuteQueryRequest):
-    """
-    Execute a SQL query through the database connector.
-    """
     if request.session_id not in sessions:
         raise HTTPException(
             status_code=404,
@@ -175,22 +190,18 @@ async def execute_query(request: ExecuteQueryRequest):
     try:
         database = sessions[request.session_id]["database"]
 
-        # Execute the query using the database connector
         rows = database.execute_query(request.query)
 
-        # Get column names from cursor
         column_names = (
             [desc[0] for desc in database.cursor.description]
             if database.cursor.description
             else []
         )
 
-        # Convert rows to list of lists (handle different data types)
         rows_list = []
         for row in rows:
             row_list = []
             for item in row:
-                # Convert to string for JSON serialization if needed
                 if item is None:
                     row_list.append(None)
                 else:
@@ -218,10 +229,7 @@ async def execute_query(request: ExecuteQueryRequest):
 
 
 @app.delete("/session/{session_id}", response_model=StatusResponse)
-async def close_session(session_id: str):
-    """
-    Close a chatbot session and cleanup database connection.
-    """
+async def delete_session(session_id: str):
     if session_id not in sessions:
         raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
 
@@ -238,16 +246,8 @@ async def close_session(session_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "active_sessions": len(sessions)}
-
-
 @app.on_event("shutdown")
 async def shutdown_event():
-    """
-    Cleanup all sessions on shutdown.
-    """
     for session_id in list(sessions.keys()):
         try:
             sessions[session_id]["database"].close()
@@ -255,21 +255,6 @@ async def shutdown_event():
             pass
     sessions.clear()
 
-        else:  # Vision chatbot
-            text_input = input("\nEnter your question: ")
-            
-            if text_input.lower() == "exit":
-                print("Goodbye!")
-                databace.close()
-                break
-
-            response = vision_chatbot.chat({
-                "query": text_input,
-                "image": image_path
-            })
-            print(f"Chatbot: {response}")
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
