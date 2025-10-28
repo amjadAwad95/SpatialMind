@@ -255,6 +255,19 @@ async def shutdown_event():
             pass
     sessions.clear()
 
+        else:  # Vision chatbot
+            text_input = input("\nEnter your question: ")
+            
+            if text_input.lower() == "exit":
+                print("Goodbye!")
+                databace.close()
+                break
+
+            response = vision_chatbot.chat({
+                "query": text_input,
+                "image": image_path
+            })
+            print(f"Chatbot: {response}")
 
 if __name__ == "__main__":
     import uvicorn

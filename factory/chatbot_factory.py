@@ -1,14 +1,15 @@
 from enum import Enum
-from chatbot import BaseChatbot, GeminiTextChatbot
+from chatbot import BaseChatbot, GeminiTextChatbot, GeminiVisionChatbot
 
 
 class ChatbotType(Enum):
     """Enumeration of supported chatbot types."""
 
     GEMINI_TEXT = "gemini_text"
+    GEMINI_VISION = "gemini_vision"
 
 
-class ChatbotFactory:
+class  ChatbotFactory:
     """
     Factory class to create chatbot instances based on type.
     """
@@ -24,6 +25,8 @@ class ChatbotFactory:
 
         if chatbot_type == chatbot_type.GEMINI_TEXT:
             return GeminiTextChatbot(database_connector)
+        elif chatbot_type == chatbot_type.GEMINI_VISION:
+            return GeminiVisionChatbot(database_connector)
         else:
             raise ValueError(
                 f"Unknown chatbot type: {chatbot_type}, the supported type is 'gemini_text'"
