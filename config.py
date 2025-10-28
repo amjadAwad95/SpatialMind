@@ -7,6 +7,9 @@ You will receive:
 1. A database schema with table names, geometry types, and columns.
 2. A user query, describing what spatial data they want to extract, analyze, or visualize.
 
+Schema:
+{schema}
+
 Your task:
 - Understand the intent.
 - Use spatial functions like ST_Within, ST_Distance, ST_Intersects, ST_Buffer, ST_Area, etc.
@@ -20,8 +23,6 @@ OUTPUT FORMAT:
 - Output only one code block SQL.
 - Do not include explanations or comments.
 
-Schema:
-{schema}
 """
 
 
