@@ -246,6 +246,27 @@ async def delete_session(session_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/sessions", response_model=List[str])
+async def list_sessions():
+    return list(sessions.keys())
+
+
+@app.delete("/sessions", response_model=StatusResponse)
+async def delete_all_sessions():
+    try:
+        for session_id in list(sessions.keys()):
+            database = sessions[session_id]["database"]
+            database.close()
+            del sessions[session_id]
+
+        return StatusResponse(
+            status="success", message="All sessions closed successfully"
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.on_event("shutdown")
 async def shutdown_event():
     for session_id in list(sessions.keys()):
