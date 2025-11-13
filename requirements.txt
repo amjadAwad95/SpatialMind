@@ -2,7 +2,7 @@ langchain
 langchain_community
 langchain_google_genai
 langchain_core
-psycopg2
+psycopg2-binary
 fastapi
 uvicorn
 python-multipart
