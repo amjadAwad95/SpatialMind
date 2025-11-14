@@ -68,28 +68,33 @@ Users including students, teachers, and researchers can now perform spatial anal
 
 ## How to Run Locally
 1. Clone the repository
+   
 ```bash
 git clone https://github.com/amjadAwad95/SpatialMind.git
 cd SpatialMind
 ```
 
 2. Create a virtual environment
+   
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # on Windows: .venv\Scripts\activate
 ```
 
 3. Create a ```.env``` file in the root folder
+   
 ```file
 GOOGLE_API_KEY = <YOUR API KEY FOR GOOGLE>
 ```
 
 4. Install the dependencies
+   
 ```bash
 pip install -r requirements.txt
 ```
 
 5. Run the app
+   
 ```bash
 uvicorn main:app --reload
 ```
