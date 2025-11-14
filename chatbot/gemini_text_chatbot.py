@@ -18,11 +18,12 @@ class GeminiTextChatbot(BaseChatbot):
     the Gemini LLM.
     """
 
-    def __init__(self, databace: PostgresqlDBConnector):
+    def __init__(self, databace: PostgresqlDBConnector, model_name="gemini-2.5-pro"):
         self.databace = databace
+        self.model_name = model_name
 
         self.model = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro",
+            model=self.model_name,
             temperature=0.8,
             max_tokens=None,
             timeout=None,
