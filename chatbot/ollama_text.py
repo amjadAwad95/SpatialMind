@@ -1,40 +1,42 @@
 from chatbot import BaseChatbot
+from langchain_ollama import ChatOllama
 from databace import PostgresqlDBConnector
-from config import system_prompt, history_system_prompt
+from config import ollama_system_prompt, history_system_prompt
 from langchain_core.output_parsers import StrOutputParser
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 
-class GeminiTextChatbot(BaseChatbot):
+class OllamaTextChatbot(BaseChatbot):
     """
-    A chatbot class that integrates with Google's Gemini model to interact with
+    A chatbot class that integrates with the Ollama LLM to interact with
     a PostgreSQL database and generate intelligent responses based on both
     user queries and conversation history.
-
     This class handles natural language input, reformulates questions for
     better context understanding, and generates appropriate answers using
-    the Gemini LLM.
+    the Ollama LLM.
     """
 
-    def __init__(self, databace: PostgresqlDBConnector, model_name="gemini-2.5-pro"):
+    def __init__(self, databace: PostgresqlDBConnector, model_name="llama3.1:8b"):
+        """
+        Initialize the OllamaTextChatbot with a database connector and model name.
+        :param databace: An instance of PostgresqlDBConnector for database interactions.
+        :param model_name: The name of the Ollama model to use (default is "llama3.1:8b").
+        """
+
         self.databace = databace
         self.model_name = model_name
 
-        self.model = ChatGoogleGenerativeAI(
+        self.model = ChatOllama(
             model=self.model_name,
             temperature=0.8,
-            max_tokens=None,
-            timeout=None,
-            max_retries=2,
         )
 
         self.chat_history = []
 
         self.answer_prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", system_prompt),
+                ("system", ollama_system_prompt),
                 MessagesPlaceholder("chat_history"),
                 ("human", "Question: {question}"),
             ]
@@ -60,7 +62,7 @@ class GeminiTextChatbot(BaseChatbot):
         :return: The chatbot's final response after reasoning over the database schema and conversation context.
         """
 
-        schema = self.databace.get_schema()
+        schema = self.databace.get_schema(short=True)
 
         history = self.get_history()
 

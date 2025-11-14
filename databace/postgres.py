@@ -1,6 +1,7 @@
 import psycopg2
 from databace.base_databace import BaseDBConnector
 
+
 class PostgresqlDBConnector(BaseDBConnector):
     """
     Singleton-style PostgreSQL database connector.
@@ -90,12 +91,14 @@ class PostgresqlDBConnector(BaseDBConnector):
         self.connection.commit()
         return self.cursor.fetchall()
 
-    def get_schema(self):
+    def get_schema(self, short=False):
         """
         Retrieve and format the database schema for all public tables and views.
 
         This includes table names, column details (name, data type, nullability, default value),
         and one sample row from each table.
+
+        :param short: If True, returns a compact representation of the schema.
 
         :return: Formatted string representation of the database schema, or None if no tables/views are found.
         """
@@ -108,45 +111,42 @@ class PostgresqlDBConnector(BaseDBConnector):
             WHERE table_schema = 'public'
             AND table_type IN ('BASE TABLE', 'VIEW')
             ORDER BY table_name;
-        """
+            """
         )
 
-        if table_names:
-            for (table_name,) in table_names:
-                schema += f"\n--- Table/View: {table_name} --- \n"
-
-                column_details = self.execute_query(
-                    """
-                    SELECT column_name, data_type, is_nullable, column_default
-                    FROM information_schema.columns
-                    WHERE table_schema = 'public' AND table_name = %s
-                    ORDER BY ordinal_position;
-                """,
-                    (table_name,),
-                )
-
-                one_row = self.execute_query(
-                    f"""
-                    SELECT *
-                    FROM {table_name}
-                    LIMIT 1;
-                """
-                )
-
-                schema += f"Sample:{one_row}\n"
-
-                for col in column_details:
-                    col_name, data_type, is_nullable, col_default = col
-
-                    default_info = f" DEFAULT {col_default}" if col_default else ""
-                    nullable_info = "NOT NULL" if is_nullable == "NO" else "NULL"
-
-                    schema += f"  - {col_name:<20} {data_type:<15} {nullable_info}{default_info} \n"
-
-            return schema
-        else:
+        if not table_names:
             print("No tables or views found in the 'public' schema.")
             return None
+
+        for (table_name,) in table_names:
+            column_details = self.execute_query(
+                """
+                SELECT column_name, data_type, is_nullable, column_default
+                FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = %s
+                ORDER BY ordinal_position;
+                """,
+                (table_name,),
+            )
+
+            if short:
+                compact_cols = []
+                for col_name, data_type, _, _ in column_details:
+                    compact_cols.append(f"{col_name} {data_type}")
+                schema += f"{table_name}({', '.join(compact_cols)})\n"
+                continue
+
+            schema += f"\n--- Table/View: {table_name} --- \n"
+
+            sample_row = self.execute_query(f"SELECT * FROM {table_name} LIMIT 1;")
+            schema += f"Sample: {sample_row}\n"
+
+            for col_name, data_type, is_nullable, col_default in column_details:
+                default_info = f" DEFAULT {col_default}" if col_default else ""
+                nullable_info = "NOT NULL" if is_nullable == "NO" else "NULL"
+                schema += f"  - {col_name:<20} {data_type:<15} {nullable_info}{default_info}\n"
+
+        return schema
 
     def close(self):
         """

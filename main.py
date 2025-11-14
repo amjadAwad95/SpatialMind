@@ -41,6 +41,7 @@ class ChatbotInitRequest(BaseModel):
     session_id: str
     database_config: DatabaseConfig
     chatbot_type: str = "gemini_text"
+    model_name: str = "gemini-2.5-pro"
 
 
 class ChatResponse(BaseModel):
@@ -88,6 +89,7 @@ async def initialize_chatbot(request: ChatbotInitRequest):
         chat_type_map = {
             "gemini_text": ChatbotType.GEMINI_TEXT,
             "gemini_vision": ChatbotType.GEMINI_VISION,
+            "ollama_text": ChatbotType.OLLAMA_TEXT,
         }
 
         db_type = db_type_map.get(request.database_config.db_type.lower())
@@ -116,7 +118,9 @@ async def initialize_chatbot(request: ChatbotInitRequest):
         database.connect()
 
         chatbot = ChatbotFactory.create_chatbot(
-            chatbot_type=chatbot_type, database_connector=database
+            chatbot_type=chatbot_type,
+            database_connector=database,
+            model_name=request.model_name,
         )
 
         sessions[request.session_id] = {"database": database, "chatbot": chatbot}

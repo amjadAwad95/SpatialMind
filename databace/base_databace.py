@@ -24,7 +24,7 @@ class BaseDBConnector(ABC):
         pass
 
     @abstractmethod
-    def get_schema(self):
+    def get_schema(self, *args, **kwargs):
         """
         Retrieve the database schema.
         :return: Database schema information.
