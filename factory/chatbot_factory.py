@@ -1,5 +1,10 @@
 from enum import Enum
-from chatbot import BaseChatbot, GeminiTextChatbot, GeminiVisionChatbot
+from chatbot import (
+    BaseChatbot,
+    GeminiTextChatbot,
+    GeminiVisionChatbot,
+    OllamaTextChatbot,
+)
 
 
 class ChatbotType(Enum):
@@ -7,15 +12,16 @@ class ChatbotType(Enum):
 
     GEMINI_TEXT = "gemini_text"
     GEMINI_VISION = "gemini_vision"
+    OLLAMA_TEXT = "ollama_text"
 
 
-class  ChatbotFactory:
+class ChatbotFactory:
     """
     Factory class to create chatbot instances based on type.
     """
 
     @staticmethod
-    def create_chatbot(chatbot_type: ChatbotType, database_connector):
+    def create_chatbot(chatbot_type: ChatbotType, database_connector, model_name):
         """
         Create a chatbot instance based on the specified type.
         :param chatbot_type: Type of chatbot to create (e.g., "gemini_text").
@@ -24,10 +30,12 @@ class  ChatbotFactory:
         """
 
         if chatbot_type == chatbot_type.GEMINI_TEXT:
-            return GeminiTextChatbot(database_connector)
+            return GeminiTextChatbot(database_connector, model_name)
         elif chatbot_type == chatbot_type.GEMINI_VISION:
-            return GeminiVisionChatbot(database_connector)
+            return GeminiVisionChatbot(database_connector, model_name)
+        elif chatbot_type == chatbot_type.OLLAMA_TEXT:
+            return OllamaTextChatbot(database_connector, model_name)
         else:
             raise ValueError(
-                f"Unknown chatbot type: {chatbot_type}, the supported type is 'gemini_text'"
+                f"Unknown chatbot type: {chatbot_type}, the supported type is 'gemini_text', 'gemini_vision', 'ollama_text'."
             )
