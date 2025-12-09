@@ -2,6 +2,14 @@
 
 A system designed to automatically generate precise spatial SQL queries based on the user’s question and execute them within QGIS.
 
+The following video provides a step-by-step tutorial on how to use the SpatialMind plugin.
+
+Note: The tutorial assumes that QGIS is already connected to your PostgreSQL/PostGIS database. Please set up the connection first.
+
+https://github.com/user-attachments/assets/b1ccfe66-e818-4433-a392-b4a7c5d82609
+
+
+
 ## Abstraction
 
 Spatial Mind is an AI-powered application that converts natural language into spatial SQL queries that can be executed in QGIS. It enables students, teachers, spatial scientists, and researchers to perform spatial analysis quickly and easily.
