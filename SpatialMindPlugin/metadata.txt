@@ -1,0 +1,32 @@
+[general]
+name=Spatial Mind
+qgisMinimumVersion=3.0
+description=A system designed to automatically generate
+	precise spatial SQL queries based on
+	the user’s question and execute them within QGIS.
+version=1.0
+author=Amjad Awad & Abdelrahman Jbr
+email=amjadawad129@gmail.com & abooodjbr04@gmail.com
+
+about=This plugin connects to a chatbot API to convert natural language
+	questions into SQL queries. It executes the queries against
+	a PostgreSQL database and adds the results as layers in QGIS.
+
+tracker=https://github.com/amjadAwad95/SpatialMind
+repository=https://github.com/amjadAwad95/SpatialMind
+# End of mandatory metadata
+
+# Recommended items:
+hasProcessingProvider=no
+changelog=1.0 - Initial release
+    - Natural language to SQL conversion
+    - Database configuration
+    - Auto-detect geometry columns
+    - Add vector and attribute layers
+
+# Tags are comma separated with spaces allowed
+tags=python,sql,natural language,chatbot,database,postgresql
+
+homepage=https://github.com/amjadAwad95/SpatialMind
+category=Database
+icon=icon.png
