@@ -115,7 +115,7 @@ The backend will start locally (default at ```http://127.0.0.1:8000```). Keep it
 
     2. Go to Plugins → Manage and Install Plugins → Install from ZIP
 
-    3. Click Browse, navigate to the plugin.zip file in the cloned repository, and click Install Plugin
+    3. Click Browse, navigate to the SpatialMindPlugin.zip file in the cloned repository, and click Install Plugin
 
 7. Open and Use the Plugin
 
