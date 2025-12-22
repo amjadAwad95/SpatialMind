@@ -1,6 +1,6 @@
 # from chatbot import BaseChatbot
 from chatbot.base_chatbot import BaseChatbot
-from databace import PostgresqlDBConnector
+from database import PostgresqlDBConnector
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
@@ -12,13 +12,13 @@ import os
 
 class GeminiVisionChatbot(BaseChatbot):
 
-    def __init__(self, databace: PostgresqlDBConnector, model_name="gemini-2.5-pro"):
+    def __init__(self, database: PostgresqlDBConnector, model_name="gemini-2.5-pro"):
         """
         A self-contained class to handle multimodal input (image + text),
         generate SQL queries, and manage conversation history using LangChain.
         Implements the BaseChatbot abstract interface.
         """
-        self.databace = databace
+        self.database = database
         self.model_name = model_name
 
         self.model = ChatGoogleGenerativeAI(model=self.model_name, temperature=0.2)
@@ -92,7 +92,7 @@ class GeminiVisionChatbot(BaseChatbot):
         uploaded_image_b64 = self.__image_to_base64(image) if image else ""
 
         history = self.get_history()
-        schema = self.databace.get_schema()
+        schema = self.database.get_schema()
 
         reformulated_question = self.rephrase_chain.invoke(
             {

@@ -1,5 +1,5 @@
 from chatbot import BaseChatbot
-from databace import PostgresqlDBConnector
+from database import PostgresqlDBConnector
 from config import system_prompt, history_system_prompt
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -18,8 +18,8 @@ class GeminiTextChatbot(BaseChatbot):
     the Gemini LLM.
     """
 
-    def __init__(self, databace: PostgresqlDBConnector, model_name="gemini-2.5-pro"):
-        self.databace = databace
+    def __init__(self, database: PostgresqlDBConnector, model_name="gemini-2.5-pro"):
+        self.database = database
         self.model_name = model_name
 
         self.model = ChatGoogleGenerativeAI(
@@ -60,7 +60,7 @@ class GeminiTextChatbot(BaseChatbot):
         :return: The chatbot's final response after reasoning over the database schema and conversation context.
         """
 
-        schema = self.databace.get_schema()
+        schema = self.database.get_schema()
 
         history = self.get_history()
 

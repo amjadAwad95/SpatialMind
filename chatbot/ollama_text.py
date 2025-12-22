@@ -1,6 +1,6 @@
 from chatbot import BaseChatbot
 from langchain_ollama import ChatOllama
-from databace import PostgresqlDBConnector
+from database import PostgresqlDBConnector
 from config import ollama_system_prompt, history_system_prompt
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage, AIMessage
@@ -17,14 +17,14 @@ class OllamaTextChatbot(BaseChatbot):
     the Ollama LLM.
     """
 
-    def __init__(self, databace: PostgresqlDBConnector, model_name="llama3.1:8b"):
+    def __init__(self, database: PostgresqlDBConnector, model_name="llama3.1:8b"):
         """
         Initialize the OllamaTextChatbot with a database connector and model name.
-        :param databace: An instance of PostgresqlDBConnector for database interactions.
+        :param database: An instance of PostgresqlDBConnector for database interactions.
         :param model_name: The name of the Ollama model to use (default is "llama3.1:8b").
         """
 
-        self.databace = databace
+        self.database = database
         self.model_name = model_name
 
         self.model = ChatOllama(
@@ -62,7 +62,7 @@ class OllamaTextChatbot(BaseChatbot):
         :return: The chatbot's final response after reasoning over the database schema and conversation context.
         """
 
-        schema = self.databace.get_schema(short=True)
+        schema = self.database.get_schema(short=True)
 
         history = self.get_history()
 
